@@ -7,145 +7,132 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0c0e;
-  --surface: #111416;
-  --surface2: #181c1f;
-  --border: rgba(255,255,255,0.07);
-  --border-hover: rgba(255,255,255,0.15);
-  --text: #f0f2f4;
-  --text-muted: rgba(240,242,244,0.45);
-  --text-dim: rgba(240,242,244,0.22);
-  --accent: #00e5a0;
-  --accent-dim: rgba(0,229,160,0.12);
-  --accent-mid: rgba(0,229,160,0.25);
-  --gold: #f5c842;
-  --gold-dim: rgba(245,200,66,0.12);
-  --red: #ff5a5a;
-  --red-dim: rgba(255,90,90,0.1);
-  --blue: #4da8ff;
-  --blue-dim: rgba(77,168,255,0.1);
+  --bg: #f4f3f0;
+  --surface: #ffffff;
+  --surface2: #f9f8f6;
+  --border: #e8e6e1;
+  --border-strong: #d4d1cb;
+  --text: #1a1917;
+  --text-muted: #6b6860;
+  --text-dim: #a8a59f;
+  --accent: #1a5c3a;
+  --accent-light: #eaf3ee;
+  --accent-mid: #c8e6d4;
+  --gold: #8a6200;
+  --gold-light: #fdf4dc;
+  --red: #b82c2c;
+  --red-light: #fdf0f0;
+  --blue: #1a4a7a;
+  --blue-light: #eaf0f8;
+  --purple: #5a2d8a;
+  --purple-light: #f3eefb;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
-
-.header { border-bottom: 1px solid var(--border); padding: 0 32px; height: 58px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; background: rgba(10,12,14,0.94); backdrop-filter: blur(12px); }
-.logo { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 58px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
+.logo { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
 .logo em { color: var(--accent); font-style: normal; }
-.header-center { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.header-center { font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
 .header-right { display: flex; align-items: center; gap: 16px; }
 .updated-tag { font-size: 0.65rem; color: var(--text-dim); }
-.refresh-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 4px; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+.refresh-btn { background: transparent; border: 1px solid var(--border-strong); color: var(--text-muted); padding: 6px 14px; border-radius: 4px; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
 .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
-.refresh-btn:disabled { opacity: 0.3; cursor: default; }
-
+.refresh-btn:disabled { opacity: 0.4; cursor: default; }
 .main { padding: 28px 32px; max-width: 1320px; margin: 0 auto; }
-
 .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 14px; }
 .spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { font-size: 0.72rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
-
-.section-label { font-family: 'Syne', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.section-label { font-family: 'Syne', sans-serif; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
 .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-.glance-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 28px; }
+.glance-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 .glance-card { background: var(--surface); padding: 22px 20px; position: relative; transition: background 0.2s; }
+.glance-card + .glance-card { border-left: 1px solid var(--border); }
 .glance-card.clickable { cursor: pointer; }
-.glance-card.clickable:hover { background: var(--surface2); }
+.glance-card.clickable:hover { background: var(--accent-light); }
 .glance-card.clickable:hover .g-value { color: var(--accent); }
-.g-label { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; font-weight: 500; }
-.g-value { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 700; line-height: 1; transition: color 0.2s; }
-.g-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 5px; font-weight: 300; }
-.g-hint { position: absolute; bottom: 10px; right: 12px; font-size: 0.58rem; color: var(--accent); opacity: 0; transition: opacity 0.2s; letter-spacing: 0.06em; text-transform: uppercase; }
-.glance-card.clickable:hover .g-hint { opacity: 1; }
-
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+.glance-card.clickable:hover .g-cta { opacity: 1; }
+.g-label { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; font-weight: 500; font-family: 'Syne', sans-serif; }
+.g-value { font-family: 'Syne', sans-serif; font-size: 2.1rem; font-weight: 800; line-height: 1; color: var(--text); transition: color 0.2s; letter-spacing: -0.02em; }
+.g-sub { font-size: 0.67rem; color: var(--text-muted); margin-top: 5px; font-weight: 300; }
+.g-cta { position: absolute; bottom: 10px; right: 12px; font-size: 0.57rem; color: var(--accent); opacity: 0; transition: opacity 0.2s; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; font-family: 'Syne', sans-serif; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } .glance-row { grid-template-columns: repeat(2, 1fr); } }
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 22px; }
-.full-section { margin-bottom: 28px; }
-
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.mb { margin-bottom: 16px; }
 .sp-list { display: flex; flex-direction: column; }
-.sp-row { display: flex; align-items: center; gap: 12px; padding: 11px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 4px; margin: 0 -8px; }
+.sp-row { display: flex; align-items: center; gap: 12px; padding: 11px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 6px; margin: 0 -8px; text-decoration: none; color: inherit; }
 .sp-row:last-child { border-bottom: none; }
 .sp-row:hover { background: var(--surface2); }
-.sp-rank { font-family: 'Syne', sans-serif; font-size: 0.65rem; font-weight: 700; color: var(--text-dim); width: 18px; flex-shrink: 0; text-align: center; }
-.sp-img { width: 42px; height: 42px; border-radius: 4px; object-fit: cover; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); }
+.sp-row:hover .sp-name { color: var(--accent); }
+.sp-rank { font-family: 'Syne', sans-serif; font-size: 0.62rem; font-weight: 700; color: var(--text-dim); width: 18px; flex-shrink: 0; text-align: center; }
+.sp-img { width: 42px; height: 42px; border-radius: 5px; object-fit: cover; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); }
 .sp-info { flex: 1; min-width: 0; }
 .sp-name { font-size: 0.86rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.15s; }
-.sp-row:hover .sp-name { color: var(--accent); }
 .sp-sci { font-size: 0.64rem; color: var(--text-muted); font-style: italic; font-weight: 300; margin-top: 2px; }
 .sp-bar-bg { height: 2px; background: var(--border); margin-top: 5px; border-radius: 1px; overflow: hidden; }
 .sp-bar-fill { height: 100%; background: var(--accent); border-radius: 1px; }
 .sp-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.sp-count { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; }
-
-.badge { font-size: 0.52rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; }
-.badge-year { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(245,200,66,0.2); }
-.badge-new { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
-.badge-once { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,90,90,0.2); }
-.badge-veryrare { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(245,200,66,0.2); }
-.badge-uncommon { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(77,168,255,0.2); }
-.badge-unusual { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(77,168,255,0.2); }
-
-.u-row { display: flex; align-items: center; gap: 11px; padding: 10px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 4px; margin: 0 -8px; }
+.sp-count { font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--text); }
+.badge { font-size: 0.52rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
+.badge-year { background: var(--gold-light); color: var(--gold); border: 1px solid rgba(138,98,0,0.15); }
+.badge-new { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(26,92,58,0.15); }
+.badge-once { background: var(--red-light); color: var(--red); border: 1px solid rgba(184,44,44,0.15); }
+.badge-veryrare { background: var(--gold-light); color: var(--gold); border: 1px solid rgba(138,98,0,0.15); }
+.badge-uncommon { background: var(--blue-light); color: var(--blue); border: 1px solid rgba(26,74,122,0.15); }
+.badge-unusual { background: var(--purple-light); color: var(--purple); border: 1px solid rgba(90,45,138,0.15); }
+.u-row { display: flex; align-items: center; gap: 11px; padding: 10px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 6px; margin: 0 -8px; }
 .u-row:last-child { border-bottom: none; }
 .u-row:hover { background: var(--surface2); }
-.u-img { width: 38px; height: 38px; border-radius: 4px; object-fit: cover; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); }
+.u-row:hover .u-name { color: var(--accent); }
+.u-img { width: 38px; height: 38px; border-radius: 5px; object-fit: cover; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border); }
 .u-info { flex: 1; min-width: 0; }
 .u-name { font-size: 0.83rem; font-weight: 500; transition: color 0.15s; }
-.u-row:hover .u-name { color: var(--accent); }
 .u-sci { font-size: 0.63rem; color: var(--text-muted); font-style: italic; font-weight: 300; margin-top: 1px; }
 .u-meta { font-size: 0.62rem; color: var(--text-dim); margin-top: 3px; }
-
 .chart-wrap { display: flex; align-items: flex-end; gap: 2px; height: 90px; margin-top: 6px; }
 .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
 .chart-bar { width: 100%; background: var(--border); border-radius: 2px 2px 0 0; min-height: 2px; transition: background 0.2s; }
-.chart-bar.has-data { background: rgba(0,229,160,0.25); }
+.chart-bar.has-data { background: var(--accent-mid); }
 .chart-bar.peak { background: var(--accent); }
-.chart-bar:hover { background: var(--accent-mid) !important; }
-.chart-lbl { font-size: 0.52rem; color: var(--text-dim); }
-
+.chart-bar:hover { background: var(--accent) !important; opacity: 0.7; }
+.chart-lbl { font-size: 0.52rem; color: var(--text-dim); font-family: 'Syne', sans-serif; }
 .foy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 10px; }
-.foy-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, transform 0.2s; }
-.foy-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.foy-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.foy-card:hover { border-color: var(--accent-mid); box-shadow: 0 4px 12px rgba(26,92,58,0.1); transform: translateY(-2px); }
+.foy-card:hover .foy-name { color: var(--accent); }
 .foy-img { width: 100%; height: 95px; object-fit: cover; display: block; background: var(--surface2); }
 .foy-body { padding: 10px 11px; }
-.foy-name { font-size: 0.78rem; font-weight: 500; transition: color 0.2s; line-height: 1.3; }
-.foy-card:hover .foy-name { color: var(--accent); }
+.foy-name { font-size: 0.78rem; font-weight: 500; line-height: 1.3; transition: color 0.2s; }
 .foy-date { font-size: 0.62rem; color: var(--text-dim); margin-top: 3px; font-weight: 300; }
 .foy-tag { display: inline-block; margin-top: 6px; }
-
-.unusual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px; }
-.unusual-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px; cursor: pointer; transition: border-color 0.2s; }
-.unusual-card:hover { border-color: var(--blue); }
-
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 500; display: flex; align-items: flex-start; justify-content: center; padding: 48px 20px; animation: fadeIn 0.15s ease; }
+.unusual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 8px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(20,18,14,0.55); backdrop-filter: blur(4px); z-index: 500; display: flex; align-items: flex-start; justify-content: center; padding: 48px 20px; overflow-y: auto; animation: fadeIn 0.15s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; width: 100%; max-width: 580px; max-height: 78vh; overflow-y: auto; animation: slideUp 0.2s ease; }
-@keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); }
-.modal-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; }
-.modal-close { background: none; border: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; cursor: pointer; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; }
-.modal-close:hover { color: var(--text); border-color: var(--border-hover); }
-.modal-body { padding: 12px 22px; }
-.m-row { display: flex; align-items: center; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 4px; margin: 0 -8px; }
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: slideUp 0.2s ease; }
+@keyframes slideUp { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); border-radius: 12px 12px 0 0; }
+.modal-title { font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--text); }
+.modal-subtitle { font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
+.modal-close { background: none; border: 1px solid var(--border); color: var(--text-muted); font-size: 0.78rem; cursor: pointer; padding: 5px 12px; border-radius: 4px; transition: all 0.2s; font-family: 'IBM Plex Sans', sans-serif; }
+.modal-close:hover { color: var(--text); border-color: var(--border-strong); }
+.modal-body { padding: 12px 22px 22px; max-height: 65vh; overflow-y: auto; }
+.m-row { display: flex; align-items: center; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 6px; margin: 0 -8px; }
 .m-row:last-child { border-bottom: none; }
 .m-row:hover { background: var(--surface2); }
-.m-img { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; background: var(--surface2); border: 1px solid var(--border); flex-shrink: 0; }
-.m-info { flex: 1; min-width: 0; }
-.m-name { font-size: 0.83rem; font-weight: 500; transition: color 0.15s; }
 .m-row:hover .m-name { color: var(--accent); }
-.m-time { font-size: 0.63rem; color: var(--text-dim); margin-top: 2px; }
-.m-conf { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
-
+.m-img { width: 36px; height: 36px; border-radius: 5px; object-fit: cover; background: var(--surface2); border: 1px solid var(--border); flex-shrink: 0; }
+.m-info { flex: 1; min-width: 0; }
+.m-name { font-size: 0.84rem; font-weight: 500; transition: color 0.15s; }
+.m-sub { font-size: 0.63rem; color: var(--text-dim); margin-top: 2px; }
+.m-right { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+.m-right.muted { color: var(--text-dim); }
 .empty { padding: 28px; text-align: center; font-size: 0.78rem; color: var(--text-dim); letter-spacing: 0.04em; }
-
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.35s ease both; }
 </style>
 </head>
 <body>
-
 <header class="header">
   <div class="logo">Bird<em>Watch</em></div>
   <div class="header-center">Station 22185 &nbsp;·&nbsp; Seattle, WA</div>
@@ -154,33 +141,33 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
     <button class="refresh-btn" id="refreshBtn" onclick="loadAll()">Refresh</button>
   </div>
 </header>
-
 <main class="main" id="mainContent">
   <div class="loading-screen"><div class="spinner"></div><div class="loading-text">Loading station data</div></div>
 </main>
-
-<div class="modal-overlay" id="todayModal" style="display:none" onclick="closeTodayModal(event)">
+<div class="modal-overlay" id="theModal" style="display:none" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="modalTitle">Today's Detections</div>
-      <button class="modal-close" onclick="closeTodayModalBtn()">✕ Close</button>
+      <div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-subtitle" id="modalSubtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕ Close</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
-
 <script>
 const WA_UNUSUAL = new Set([
   'Northern Pygmy-Owl','Great Horned Owl','Northern Saw-whet Owl',
-  'Pileated Woodpecker','Townsend\'s Solitaire','Hutton\'s Vireo',
+  'Pileated Woodpecker',"Townsend's Solitaire","Hutton's Vireo",
   'Pacific Wren','Brown Creeper','Red Crossbill','Pine Grosbeak',
-  'Clark\'s Nutcracker','Bohemian Waxwing','Common Redpoll',
+  "Clark's Nutcracker",'Bohemian Waxwing','Common Redpoll',
   'Sandhill Crane','Tundra Swan','Trumpeter Swan',
   'Greater White-fronted Goose','Snow Goose','Harlequin Duck',
   'Common Goldeneye','Ring-necked Duck','Eurasian Wigeon',
   'Gadwall','Green-winged Teal','Northern Pintail',
   'Ring-necked Pheasant','California Quail','Common Loon',
-  'Great Egret','Bald Eagle','Northern Harrier','Cooper\'s Hawk',
+  'Great Egret','Bald Eagle','Northern Harrier',"Cooper's Hawk",
   'Red-tailed Hawk','American Kestrel','Killdeer','Dunlin',
   'Savannah Sparrow','American Tree Sparrow','Mourning Dove',
   'Rufous Hummingbird','Tree Swallow','Mountain Bluebird',
@@ -189,24 +176,18 @@ const WA_UNUSUAL = new Set([
   'Common Raven','Eurasian Collared-Dove','American Goldfinch',
   'Pine Siskin','Cedar Waxwing','White-crowned Sparrow',
 ]);
-
 function audubonUrl(name) {
   return 'https://www.audubon.org/field-guide/bird/' +
     name.toLowerCase().replace(/['']/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 }
-
 async function bwFetch(path) {
   const res = await fetch('/.netlify/functions/birdweather?path=' + encodeURIComponent(path));
   if (!res.ok) throw new Error('API ' + res.status);
   return res.json();
 }
-
 const fmt = ts => ts ? new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
-const fmtTime = ts => ts ? new Date(ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
 const fmtHour = h => h===0?'12am':h<12?h+'am':h===12?'12pm':(h-12)+'pm';
-
 let allSpecies = [], allDetections = [];
-
 async function loadAll() {
   const btn = document.getElementById('refreshBtn');
   btn.disabled = true; btn.textContent = 'Loading…';
@@ -229,7 +210,6 @@ async function loadAll() {
     btn.disabled = false; btn.textContent = 'Refresh';
   }
 }
-
 function renderAll() {
   const main = document.getElementById('mainContent');
   main.innerHTML = '';
@@ -239,11 +219,61 @@ function renderAll() {
   renderUnusual(main);
   renderFOY(main);
 }
-
+function openModal(title, subtitle, bodyHtml) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSubtitle').textContent = subtitle;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('theModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('theModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+function openTodaySpeciesModal() {
+  const today = new Date().toDateString();
+  const todayDets = allDetections.filter(d => new Date(d.timestamp).toDateString() === today);
+  const spMap = {};
+  todayDets.forEach(d => {
+    const name = d.species?.commonName;
+    if (!name) return;
+    if (!spMap[name] || d.confidence > spMap[name].confidence) spMap[name] = d;
+  });
+  const spList = Object.values(spMap).sort((a,b) => b.confidence - a.confidence);
+  const title = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const subtitle = spList.length + ' species detected today';
+  const body = !spList.length
+    ? '<div class="empty">No detections yet today.</div>'
+    : spList.map(d => {
+        const sp = d.species;
+        const conf = Math.round((d.confidence||0)*100);
+        return `<div class="m-row" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
+          <img class="m-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
+          <div class="m-info"><div class="m-name">${sp.commonName}</div><div class="m-sub">${sp.scientificName}</div></div>
+          <div class="m-right ${conf<70?'muted':''}">${conf}%</div>
+        </div>`;
+      }).join('');
+  openModal(title, subtitle, body);
+}
+function openAllSpeciesModal() {
+  const sorted = [...allSpecies].sort((a,b) => (b.detections?.total||0) - (a.detections?.total||0));
+  const body = !sorted.length
+    ? '<div class="empty">No species data.</div>'
+    : sorted.map(sp => {
+        const n = sp.detections?.total || 0;
+        return `<div class="m-row" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
+          <img class="m-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
+          <div class="m-info"><div class="m-name">${sp.commonName}</div><div class="m-sub">${sp.scientificName}</div></div>
+          <div class="m-right">${n.toLocaleString()}</div>
+        </div>`;
+      }).join('');
+  openModal('All Detected Species', sorted.length + ' species all time', body);
+}
 function renderGlance(c) {
   const today = new Date().toDateString();
   const td = allDetections.filter(d => new Date(d.timestamp).toDateString() === today);
-  const tdSp = new Set(td.map(d => d.species?.commonName)).size;
+  const tdSp = new Set(td.map(d => d.species?.commonName).filter(Boolean)).size;
   const hc = Array(24).fill(0);
   allDetections.forEach(d => hc[new Date(d.timestamp).getHours()]++);
   const peak = hc.indexOf(Math.max(...hc));
@@ -251,16 +281,22 @@ function renderGlance(c) {
   const el = document.createElement('div');
   el.className = 'glance-row fade-up';
   el.innerHTML = `
-    <div class="glance-card clickable" onclick="openTodayModal()">
-      <div class="g-label">Today's Detections</div>
-      <div class="g-value">${td.length}</div>
-      <div class="g-sub">birds heard today</div>
-      <div class="g-hint">View all →</div>
-    </div>
     <div class="glance-card">
+      <div class="g-label">Detections Today</div>
+      <div class="g-value">${td.length}</div>
+      <div class="g-sub">individual detections</div>
+    </div>
+    <div class="glance-card clickable" onclick="openTodaySpeciesModal()">
+      <div class="g-label">Species Today</div>
+      <div class="g-value">${tdSp}</div>
+      <div class="g-sub">unique birds heard</div>
+      <div class="g-cta">View all →</div>
+    </div>
+    <div class="glance-card clickable" onclick="openAllSpeciesModal()">
       <div class="g-label">Total Species</div>
       <div class="g-value">${allSpecies.length}</div>
-      <div class="g-sub">all time</div>
+      <div class="g-sub">detected all time</div>
+      <div class="g-cta">View all →</div>
     </div>
     <div class="glance-card">
       <div class="g-label">Peak Activity</div>
@@ -268,44 +304,12 @@ function renderGlance(c) {
       <div class="g-sub">busiest recent hour</div>
     </div>
     <div class="glance-card">
-      <div class="g-label">Species Today</div>
-      <div class="g-value">${tdSp}</div>
-      <div class="g-sub">unique birds</div>
-    </div>
-    <div class="glance-card">
       <div class="g-label">Avg Confidence</div>
-      <div class="g-value">${avgConf}<span style="font-size:1.1rem;opacity:0.45">%</span></div>
+      <div class="g-value">${avgConf}<span style="font-size:1rem;color:var(--text-dim)">%</span></div>
       <div class="g-sub">today's detections</div>
     </div>`;
   c.appendChild(el);
 }
-
-function openTodayModal() {
-  const today = new Date().toDateString();
-  const td = allDetections.filter(d=>new Date(d.timestamp).toDateString()===today)
-    .sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-  document.getElementById('modalTitle').textContent =
-    'Today — ' + new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  document.getElementById('modalBody').innerHTML = !td.length
-    ? '<div class="empty">No detections yet today.</div>'
-    : td.map(d=>{
-        const sp = d.species;
-        const conf = Math.round((d.confidence||0)*100);
-        return `<div class="m-row" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
-          <img class="m-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
-          <div class="m-info">
-            <div class="m-name">${sp.commonName}</div>
-            <div class="m-time">${sp.scientificName} &nbsp;·&nbsp; ${fmtTime(d.timestamp)}</div>
-          </div>
-          <div class="m-conf">${conf}%</div>
-        </div>`;
-      }).join('');
-  document.getElementById('todayModal').style.display='flex';
-  document.body.style.overflow='hidden';
-}
-function closeTodayModal(e){if(e.target===document.getElementById('todayModal'))closeTodayModalBtn();}
-function closeTodayModalBtn(){document.getElementById('todayModal').style.display='none';document.body.style.overflow='';}
-
 function renderTwoCol(c) {
   const row = document.createElement('div');
   row.className = 'two-col';
@@ -314,14 +318,11 @@ function renderTwoCol(c) {
   const sorted = [...allSpecies].sort((a,b)=>(b.detections?.total||0)-(a.detections?.total||0)).slice(0,5);
   const max = sorted[0]?.detections?.total||1;
   const thisYear = new Date().getFullYear();
-  const foySet = new Set(allSpecies.filter(sp=>{
-    if(!sp.latestDetectionAt) return false;
-    return new Date(sp.latestDetectionAt).getFullYear()===thisYear && (sp.detections?.total||0)<80;
-  }).map(s=>s.commonName));
-  t5.innerHTML = `<div class="section-label">Top 5 Species</div><div class="sp-list">`+
-    sorted.map((sp,i)=>{
-      const n = sp.detections?.total||0;
-      const pct = Math.round(n/max*100);
+  const foySet = new Set(allSpecies.filter(sp => sp.latestDetectionAt &&
+    new Date(sp.latestDetectionAt).getFullYear()===thisYear && (sp.detections?.total||0)<80).map(s=>s.commonName));
+  t5.innerHTML = `<div class="section-label">Top 5 Most Detected</div><div class="sp-list">`+
+    sorted.map((sp,i) => {
+      const n = sp.detections?.total||0, pct = Math.round(n/max*100);
       return `<div class="sp-row" style="animation-delay:${i*.06}s" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
         <div class="sp-rank">${i+1}</div>
         <img class="sp-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
@@ -341,15 +342,15 @@ function renderTwoCol(c) {
   const rareList = [...allSpecies].filter(sp=>(sp.detections?.total||0)<=10)
     .sort((a,b)=>(a.detections?.total||0)-(b.detections?.total||0)).slice(0,6);
   rare.innerHTML = `<div class="section-label">Rare at Your Station</div>`+
-    (rareList.length ? rareList.map((sp,i)=>{
-      const n=sp.detections?.total||0;
-      const [cls,lbl]=n===1?['badge-once','Once ever']:n<=3?['badge-veryrare','Very rare']:['badge-uncommon','Uncommon'];
+    (rareList.length ? rareList.map((sp,i) => {
+      const n = sp.detections?.total||0;
+      const [cls,lbl] = n===1?['badge-once','Once ever']:n<=3?['badge-veryrare','Very rare']:['badge-uncommon','Uncommon'];
       return `<div class="u-row" style="animation-delay:${i*.06}s" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
         <img class="u-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
         <div class="u-info">
           <div class="u-name">${sp.commonName}</div>
           <div class="u-sci">${sp.scientificName}</div>
-          <div class="u-meta">${fmt(sp.latestDetectionAt)} &nbsp;·&nbsp; ${n} detection${n===1?'':'s'}</div>
+          <div class="u-meta">${fmt(sp.latestDetectionAt)} · ${n} detection${n===1?'':'s'}</div>
         </div>
         <span class="badge ${cls}">${lbl}</span>
       </div>`;
@@ -357,41 +358,37 @@ function renderTwoCol(c) {
   row.appendChild(t5); row.appendChild(rare);
   c.appendChild(row);
 }
-
 function renderChart(c) {
   if (!allDetections.length) return;
   const hc = Array(24).fill(0);
-  allDetections.forEach(d=>hc[new Date(d.timestamp).getHours()]++);
-  const mx = Math.max(...hc,1);
-  const pk = hc.indexOf(Math.max(...hc));
-  const lbls=['12a','1','2','3','4','5','6','7','8','9','10','11','12p','1','2','3','4','5','6','7','8','9','10','11'];
+  allDetections.forEach(d => hc[new Date(d.timestamp).getHours()]++);
+  const mx = Math.max(...hc,1), pk = hc.indexOf(Math.max(...hc));
+  const lbls = ['12a','1','2','3','4','5','6','7','8','9','10','11','12p','1','2','3','4','5','6','7','8','9','10','11'];
   const sec = document.createElement('div');
-  sec.className = 'full-section';
+  sec.className = 'mb';
   sec.innerHTML = `<div class="panel"><div class="section-label">Activity by Hour</div><div class="chart-wrap">`+
-    hc.map((n,h)=>{
-      const pct=Math.max(Math.round(n/mx*100),2);
-      const cls=h===pk?'peak':n>0?'has-data':'';
-      return `<div class="chart-col" title="${lbls[h]}: ${n}">
-        <div class="chart-bar ${cls}" style="height:${pct}%"></div>
+    hc.map((n,h) => {
+      const pct = Math.max(Math.round(n/mx*100),2);
+      return `<div class="chart-col" title="${lbls[h]}: ${n} detections">
+        <div class="chart-bar ${h===pk?'peak':n>0?'has-data':''}" style="height:${pct}%"></div>
         <div class="chart-lbl">${h%3===0?lbls[h]:''}</div>
       </div>`;
     }).join('')+'</div></div>';
   c.appendChild(sec);
 }
-
 function renderUnusual(c) {
-  const unusual = allSpecies.filter(sp=>WA_UNUSUAL.has(sp.commonName));
+  const unusual = allSpecies.filter(sp => WA_UNUSUAL.has(sp.commonName));
   if (!unusual.length) return;
   const sec = document.createElement('div');
-  sec.className = 'full-section';
-  const cards = unusual.sort((a,b)=>(b.detections?.total||0)-(a.detections?.total||0)).slice(0,8).map((sp,i)=>{
-    const n=sp.detections?.total||0;
-    return `<div class="unusual-card u-row" style="animation-delay:${i*.05}s;margin:0" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
+  sec.className = 'mb';
+  const cards = unusual.sort((a,b)=>(b.detections?.total||0)-(a.detections?.total||0)).slice(0,8).map((sp,i) => {
+    const n = sp.detections?.total||0;
+    return `<div class="u-row" style="animation-delay:${i*.05}s;margin:0;border-radius:6px;border-bottom:1px solid var(--border)" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
       <img class="u-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
       <div class="u-info">
         <div class="u-name">${sp.commonName}</div>
         <div class="u-sci">${sp.scientificName}</div>
-        <div class="u-meta">${n} detection${n===1?'':'s'} &nbsp;·&nbsp; Last: ${fmt(sp.latestDetectionAt)}</div>
+        <div class="u-meta">${n} detection${n===1?'':'s'} · Last: ${fmt(sp.latestDetectionAt)}</div>
       </div>
       <span class="badge badge-unusual">WA Unusual</span>
     </div>`;
@@ -399,23 +396,20 @@ function renderUnusual(c) {
   sec.innerHTML = `<div class="panel"><div class="section-label">Unusual — Regionally Rare in Washington State</div><div class="unusual-grid">${cards}</div></div>`;
   c.appendChild(sec);
 }
-
 function renderFOY(c) {
   const thisYear = new Date().getFullYear();
-  const foy = allSpecies.filter(sp=>{
-    if (!sp.latestDetectionAt) return false;
-    return new Date(sp.latestDetectionAt).getFullYear()===thisYear && (sp.detections?.total||0)<100;
-  }).sort((a,b)=>new Date(b.latestDetectionAt)-new Date(a.latestDetectionAt)).slice(0,8);
+  const foy = allSpecies.filter(sp => sp.latestDetectionAt &&
+    new Date(sp.latestDetectionAt).getFullYear()===thisYear && (sp.detections?.total||0)<100)
+    .sort((a,b) => new Date(b.latestDetectionAt)-new Date(a.latestDetectionAt)).slice(0,8);
   if (!foy.length) return;
   const sec = document.createElement('div');
-  sec.className = 'full-section';
-  const cards = foy.map((sp,i)=>{
-    const n=sp.detections?.total||0;
+  const cards = foy.map((sp,i) => {
+    const n = sp.detections?.total||0;
     return `<div class="foy-card fade-up" style="animation-delay:${i*.05}s" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
-      ${sp.imageUrl?`<img class="foy-img" src="${sp.imageUrl}" onerror="this.style.display='none'" alt="">`:`<div class="foy-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:1.6rem">🐦</div>`}
+      ${sp.imageUrl?`<img class="foy-img" src="${sp.imageUrl}" onerror="this.style.display='none'" alt="">`:`<div class="foy-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:1.8rem;background:var(--surface2)">🐦</div>`}
       <div class="foy-body">
         <div class="foy-name">${sp.commonName}</div>
-        <div class="foy-date">${n} total · Last: ${fmt(sp.latestDetectionAt)}</div>
+        <div class="foy-date">${n} detections · Last: ${fmt(sp.latestDetectionAt)}</div>
         <span class="badge badge-new foy-tag">New ${thisYear}</span>
       </div>
     </div>`;
@@ -423,8 +417,6 @@ function renderFOY(c) {
   sec.innerHTML = `<div class="section-label">First of ${thisYear} — Recent Arrivals</div><div class="foy-grid">${cards}</div>`;
   c.appendChild(sec);
 }
-
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeTodayModalBtn(); });
 loadAll();
 setInterval(loadAll, 60*60*1000);
 </script>
