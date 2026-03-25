@@ -61,7 +61,7 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
 .mb { margin-bottom: 16px; }
 .sp-list { display: flex; flex-direction: column; }
-.sp-row { display: flex; align-items: center; gap: 12px; padding: 11px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 6px; margin: 0 -8px; text-decoration: none; color: inherit; }
+.sp-row { display: flex; align-items: center; gap: 12px; padding: 11px 8px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; border-radius: 6px; margin: 0 -8px; }
 .sp-row:last-child { border-bottom: none; }
 .sp-row:hover { background: var(--surface2); }
 .sp-row:hover .sp-name { color: var(--accent); }
@@ -90,6 +90,7 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 .u-name { font-size: 0.83rem; font-weight: 500; transition: color 0.15s; }
 .u-sci { font-size: 0.63rem; color: var(--text-muted); font-style: italic; font-weight: 300; margin-top: 1px; }
 .u-meta { font-size: 0.62rem; color: var(--text-dim); margin-top: 3px; }
+.freq-pill { font-size: 0.6rem; font-weight: 600; padding: 2px 7px; border-radius: 10px; background: var(--purple-light); color: var(--purple); border: 1px solid rgba(90,45,138,0.15); white-space: nowrap; flex-shrink: 0; font-family: 'Syne', sans-serif; }
 .chart-wrap { display: flex; align-items: flex-end; gap: 2px; height: 90px; margin-top: 6px; }
 .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
 .chart-bar { width: 100%; background: var(--border); border-radius: 2px 2px 0 0; min-height: 2px; transition: background 0.2s; }
@@ -127,6 +128,7 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 .m-sub { font-size: 0.63rem; color: var(--text-dim); margin-top: 2px; }
 .m-right { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
 .m-right.muted { color: var(--text-dim); }
+.ebird-note { font-size: 0.65rem; color: var(--text-dim); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-style: italic; }
 .empty { padding: 28px; text-align: center; font-size: 0.78rem; color: var(--text-dim); letter-spacing: 0.04em; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .fade-up { animation: fadeUp 0.35s ease both; }
@@ -157,25 +159,9 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
   </div>
 </div>
 <script>
-const WA_UNUSUAL = new Set([
-  'Northern Pygmy-Owl','Great Horned Owl','Northern Saw-whet Owl',
-  'Pileated Woodpecker',"Townsend's Solitaire","Hutton's Vireo",
-  'Pacific Wren','Brown Creeper','Red Crossbill','Pine Grosbeak',
-  "Clark's Nutcracker",'Bohemian Waxwing','Common Redpoll',
-  'Sandhill Crane','Tundra Swan','Trumpeter Swan',
-  'Greater White-fronted Goose','Snow Goose','Harlequin Duck',
-  'Common Goldeneye','Ring-necked Duck','Eurasian Wigeon',
-  'Gadwall','Green-winged Teal','Northern Pintail',
-  'Ring-necked Pheasant','California Quail','Common Loon',
-  'Great Egret','Bald Eagle','Northern Harrier',"Cooper's Hawk",
-  'Red-tailed Hawk','American Kestrel','Killdeer','Dunlin',
-  'Savannah Sparrow','American Tree Sparrow','Mourning Dove',
-  'Rufous Hummingbird','Tree Swallow','Mountain Bluebird',
-  'Hermit Thrush','Orange-crowned Warbler','American Pipit',
-  'Lesser Goldfinch','Black-billed Magpie','California Scrub-Jay',
-  'Common Raven','Eurasian Collared-Dove','American Goldfinch',
-  'Pine Siskin','Cedar Waxwing','White-crowned Sparrow',
-]);
+const CONF_GENERAL = 0.70;
+const UNUSUAL_THRESHOLD = 10;
+
 function audubonUrl(name) {
   return 'https://www.audubon.org/field-guide/bird/' +
     name.toLowerCase().replace(/['']/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -185,21 +171,32 @@ async function bwFetch(path) {
   if (!res.ok) throw new Error('API ' + res.status);
   return res.json();
 }
+async function ebirdFetch() {
+  const res = await fetch('/.netlify/functions/birdweather?action=ebird-frequency');
+  if (!res.ok) return {};
+  const data = await res.json();
+  return data.frequencies || {};
+}
 const fmt = ts => ts ? new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
 const fmtHour = h => h===0?'12am':h<12?h+'am':h===12?'12pm':(h-12)+'pm';
-let allSpecies = [], allDetections = [];
+
+let allSpecies = [], allDetections = [], ebirdFreq = {};
+
 async function loadAll() {
   const btn = document.getElementById('refreshBtn');
   btn.disabled = true; btn.textContent = 'Loading…';
   document.getElementById('mainContent').innerHTML =
     '<div class="loading-screen"><div class="spinner"></div><div class="loading-text">Fetching station data</div></div>';
   try {
-    const [spR, dR] = await Promise.all([
+    const [spR, dR, freq] = await Promise.all([
       bwFetch('/species?limit=100&period=all'),
-      bwFetch('/detections?limit=100&period=all')
+      bwFetch('/detections?limit=100&period=all'),
+      ebirdFetch()
     ]);
     allSpecies = spR.species || [];
     allDetections = dR.detections || [];
+    ebirdFreq = freq;
+    allDetections = allDetections.filter(d => (d.confidence || 0) >= CONF_GENERAL);
     document.getElementById('updatedTag').textContent =
       'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     renderAll();
@@ -210,6 +207,7 @@ async function loadAll() {
     btn.disabled = false; btn.textContent = 'Refresh';
   }
 }
+
 function renderAll() {
   const main = document.getElementById('mainContent');
   main.innerHTML = '';
@@ -219,6 +217,7 @@ function renderAll() {
   renderUnusual(main);
   renderFOY(main);
 }
+
 function openModal(title, subtitle, bodyHtml) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalSubtitle').textContent = subtitle;
@@ -231,6 +230,7 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
 function openTodaySpeciesModal() {
   const today = new Date().toDateString();
   const todayDets = allDetections.filter(d => new Date(d.timestamp).toDateString() === today);
@@ -242,7 +242,6 @@ function openTodaySpeciesModal() {
   });
   const spList = Object.values(spMap).sort((a,b) => b.confidence - a.confidence);
   const title = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  const subtitle = spList.length + ' species detected today';
   const body = !spList.length
     ? '<div class="empty">No detections yet today.</div>'
     : spList.map(d => {
@@ -251,25 +250,33 @@ function openTodaySpeciesModal() {
         return `<div class="m-row" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
           <img class="m-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
           <div class="m-info"><div class="m-name">${sp.commonName}</div><div class="m-sub">${sp.scientificName}</div></div>
-          <div class="m-right ${conf<70?'muted':''}">${conf}%</div>
+          <div class="m-right ${conf<80?'muted':''}">${conf}%</div>
         </div>`;
       }).join('');
-  openModal(title, subtitle, body);
+  openModal(title, spList.length + ' species at 70%+ confidence', body);
 }
+
 function openAllSpeciesModal() {
   const sorted = [...allSpecies].sort((a,b) => (b.detections?.total||0) - (a.detections?.total||0));
   const body = !sorted.length
     ? '<div class="empty">No species data.</div>'
     : sorted.map(sp => {
         const n = sp.detections?.total || 0;
+        const freq = ebirdFreq[sp.commonName];
+        const freqTag = freq !== undefined
+          ? `<span style="font-size:0.6rem;color:var(--text-dim);margin-left:6px">eBird ${freq}%</span>` : '';
         return `<div class="m-row" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
           <img class="m-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
-          <div class="m-info"><div class="m-name">${sp.commonName}</div><div class="m-sub">${sp.scientificName}</div></div>
+          <div class="m-info">
+            <div class="m-name">${sp.commonName}${freqTag}</div>
+            <div class="m-sub">${sp.scientificName}</div>
+          </div>
           <div class="m-right">${n.toLocaleString()}</div>
         </div>`;
-      }).join('');
+      }).join('') + '<div class="ebird-note">eBird % = frequency on Seattle-area checklists. Lower = rarer regionally.</div>';
   openModal('All Detected Species', sorted.length + ' species all time', body);
 }
+
 function renderGlance(c) {
   const today = new Date().toDateString();
   const td = allDetections.filter(d => new Date(d.timestamp).toDateString() === today);
@@ -284,7 +291,7 @@ function renderGlance(c) {
     <div class="glance-card">
       <div class="g-label">Detections Today</div>
       <div class="g-value">${td.length}</div>
-      <div class="g-sub">individual detections</div>
+      <div class="g-sub">at 70%+ confidence</div>
     </div>
     <div class="glance-card clickable" onclick="openTodaySpeciesModal()">
       <div class="g-label">Species Today</div>
@@ -310,6 +317,7 @@ function renderGlance(c) {
     </div>`;
   c.appendChild(el);
 }
+
 function renderTwoCol(c) {
   const row = document.createElement('div');
   row.className = 'two-col';
@@ -345,12 +353,13 @@ function renderTwoCol(c) {
     (rareList.length ? rareList.map((sp,i) => {
       const n = sp.detections?.total||0;
       const [cls,lbl] = n===1?['badge-once','Once ever']:n<=3?['badge-veryrare','Very rare']:['badge-uncommon','Uncommon'];
+      const freq = ebirdFreq[sp.commonName];
       return `<div class="u-row" style="animation-delay:${i*.06}s" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
         <img class="u-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
         <div class="u-info">
           <div class="u-name">${sp.commonName}</div>
           <div class="u-sci">${sp.scientificName}</div>
-          <div class="u-meta">${fmt(sp.latestDetectionAt)} · ${n} detection${n===1?'':'s'}</div>
+          <div class="u-meta">${fmt(sp.latestDetectionAt)} · ${n} detection${n===1?'':'s'}${freq!==undefined?' · eBird '+freq+'%':''}</div>
         </div>
         <span class="badge ${cls}">${lbl}</span>
       </div>`;
@@ -358,6 +367,7 @@ function renderTwoCol(c) {
   row.appendChild(t5); row.appendChild(rare);
   c.appendChild(row);
 }
+
 function renderChart(c) {
   if (!allDetections.length) return;
   const hc = Array(24).fill(0);
@@ -376,26 +386,47 @@ function renderChart(c) {
     }).join('')+'</div></div>';
   c.appendChild(sec);
 }
+
 function renderUnusual(c) {
-  const unusual = allSpecies.filter(sp => WA_UNUSUAL.has(sp.commonName));
-  if (!unusual.length) return;
+  const unusual = allSpecies.filter(sp => {
+    const freq = ebirdFreq[sp.commonName];
+    return freq !== undefined && freq <= UNUSUAL_THRESHOLD;
+  });
+  if (!unusual.length) {
+    if (Object.keys(ebirdFreq).length === 0) {
+      const sec = document.createElement('div');
+      sec.className = 'mb';
+      sec.innerHTML = `<div class="panel"><div class="section-label">Unusual Detections</div>
+        <div class="empty">eBird frequency data unavailable.</div></div>`;
+      c.appendChild(sec);
+    }
+    return;
+  }
+  const sorted = unusual.sort((a,b) => (ebirdFreq[a.commonName]||0) - (ebirdFreq[b.commonName]||0)).slice(0,8);
   const sec = document.createElement('div');
   sec.className = 'mb';
-  const cards = unusual.sort((a,b)=>(b.detections?.total||0)-(a.detections?.total||0)).slice(0,8).map((sp,i) => {
+  const cards = sorted.map((sp,i) => {
     const n = sp.detections?.total||0;
-    return `<div class="u-row" style="animation-delay:${i*.05}s;margin:0;border-radius:6px;border-bottom:1px solid var(--border)" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
+    const freq = ebirdFreq[sp.commonName];
+    return `<div class="u-row" style="animation-delay:${i*.05}s;margin:0;border-radius:6px;border-bottom:1px solid var(--border)"
+      onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
       <img class="u-img" src="${sp.thumbnailUrl||''}" onerror="this.style.display='none'" alt="">
       <div class="u-info">
         <div class="u-name">${sp.commonName}</div>
         <div class="u-sci">${sp.scientificName}</div>
         <div class="u-meta">${n} detection${n===1?'':'s'} · Last: ${fmt(sp.latestDetectionAt)}</div>
       </div>
-      <span class="badge badge-unusual">WA Unusual</span>
+      ${freq!==undefined?`<span class="freq-pill">${freq}% regional</span>`:'<span class="badge badge-unusual">Unusual</span>'}
     </div>`;
   }).join('');
-  sec.innerHTML = `<div class="panel"><div class="section-label">Unusual — Regionally Rare in Washington State</div><div class="unusual-grid">${cards}</div></div>`;
+  sec.innerHTML = `<div class="panel">
+    <div class="section-label">Unusual — Verified by eBird Seattle Frequency Data</div>
+    <div class="unusual-grid">${cards}</div>
+    <div class="ebird-note">% = how often this species appears on Seattle-area eBird checklists. Under 10% = regionally uncommon.</div>
+  </div>`;
   c.appendChild(sec);
 }
+
 function renderFOY(c) {
   const thisYear = new Date().getFullYear();
   const foy = allSpecies.filter(sp => sp.latestDetectionAt &&
@@ -405,8 +436,10 @@ function renderFOY(c) {
   const sec = document.createElement('div');
   const cards = foy.map((sp,i) => {
     const n = sp.detections?.total||0;
-    return `<div class="foy-card fade-up" style="animation-delay:${i*.05}s" onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
-      ${sp.imageUrl?`<img class="foy-img" src="${sp.imageUrl}" onerror="this.style.display='none'" alt="">`:`<div class="foy-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:1.8rem;background:var(--surface2)">🐦</div>`}
+    return `<div class="foy-card fade-up" style="animation-delay:${i*.05}s"
+      onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
+      ${sp.imageUrl?`<img class="foy-img" src="${sp.imageUrl}" onerror="this.style.display='none'" alt="">`
+        :`<div class="foy-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:1.8rem;background:var(--surface2)">🐦</div>`}
       <div class="foy-body">
         <div class="foy-name">${sp.commonName}</div>
         <div class="foy-date">${n} detections · Last: ${fmt(sp.latestDetectionAt)}</div>
@@ -417,6 +450,7 @@ function renderFOY(c) {
   sec.innerHTML = `<div class="section-label">First of ${thisYear} — Recent Arrivals</div><div class="foy-grid">${cards}</div>`;
   c.appendChild(sec);
 }
+
 loadAll();
 setInterval(loadAll, 60*60*1000);
 </script>
