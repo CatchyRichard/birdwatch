@@ -180,7 +180,7 @@ async function ebirdFetch() {
 const fmt = ts => ts ? new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
 const fmtHour = h => h===0?'12am':h<12?h+'am':h===12?'12pm':(h-12)+'pm';
 
-let allSpecies = [], allDetections = [], ebirdFreq = {};
+let allSpecies = [], allDetections = [], todayDetections = [], ebirdFreq = {};
 
 async function loadAll() {
   const btn = document.getElementById('refreshBtn');
@@ -188,15 +188,17 @@ async function loadAll() {
   document.getElementById('mainContent').innerHTML =
     '<div class="loading-screen"><div class="spinner"></div><div class="loading-text">Fetching station data</div></div>';
   try {
-    const [spR, dR, freq] = await Promise.all([
+    const todayStr = new Date().toISOString().split('T')[0];
+    const [spR, dR, todayR, freq] = await Promise.all([
       bwFetch('/species?limit=100&period=all'),
       bwFetch('/detections?limit=100&period=all'),
+      bwFetch('/detections?limit=500&from=' + todayStr),
       ebirdFetch()
     ]);
     allSpecies = spR.species || [];
-    allDetections = dR.detections || [];
+    allDetections = (dR.detections || []).filter(d => (d.confidence || 0) >= CONF_GENERAL);
+    todayDetections = (todayR.detections || []).filter(d => (d.confidence || 0) >= CONF_GENERAL);
     ebirdFreq = freq;
-    allDetections = allDetections.filter(d => (d.confidence || 0) >= CONF_GENERAL);
     document.getElementById('updatedTag').textContent =
       'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     renderAll();
@@ -232,10 +234,8 @@ function closeModal() {
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 
 function openTodaySpeciesModal() {
-  const today = new Date().toDateString();
-  const todayDets = allDetections.filter(d => new Date(d.timestamp).toDateString() === today);
   const spMap = {};
-  todayDets.forEach(d => {
+  todayDetections.forEach(d => {
     const name = d.species?.commonName;
     if (!name) return;
     if (!spMap[name] || d.confidence > spMap[name].confidence) spMap[name] = d;
@@ -278,19 +278,18 @@ function openAllSpeciesModal() {
 }
 
 function renderGlance(c) {
-  const today = new Date().toDateString();
-  const td = allDetections.filter(d => new Date(d.timestamp).toDateString() === today);
-  const tdSp = new Set(td.map(d => d.species?.commonName).filter(Boolean)).size;
+  const tdSp = new Set(todayDetections.map(d => d.species?.commonName).filter(Boolean)).size;
   const hc = Array(24).fill(0);
-  allDetections.forEach(d => hc[new Date(d.timestamp).getHours()]++);
-  const peak = hc.indexOf(Math.max(...hc));
-  const avgConf = td.length ? Math.round(td.reduce((s,d)=>s+(d.confidence||0),0)/td.length*100) : 0;
+  todayDetections.forEach(d => hc[new Date(d.timestamp).getHours()]++);
+  const peak = hc.reduce((best, val, h) => val > hc[best] ? h : best, 0);
+  const avgConf = todayDetections.length
+    ? Math.round(todayDetections.reduce((s,d)=>s+(d.confidence||0),0)/todayDetections.length*100) : 0;
   const el = document.createElement('div');
   el.className = 'glance-row fade-up';
   el.innerHTML = `
     <div class="glance-card">
       <div class="g-label">Detections Today</div>
-      <div class="g-value">${td.length}</div>
+      <div class="g-value">${todayDetections.length}</div>
       <div class="g-sub">at 70%+ confidence</div>
     </div>
     <div class="glance-card clickable" onclick="openTodaySpeciesModal()">
@@ -307,8 +306,8 @@ function renderGlance(c) {
     </div>
     <div class="glance-card">
       <div class="g-label">Peak Activity</div>
-      <div class="g-value">${fmtHour(peak)}</div>
-      <div class="g-sub">busiest recent hour</div>
+      <div class="g-value">${todayDetections.length ? fmtHour(peak) : '—'}</div>
+      <div class="g-sub">busiest hour today</div>
     </div>
     <div class="glance-card">
       <div class="g-label">Avg Confidence</div>
@@ -326,8 +325,8 @@ function renderTwoCol(c) {
   const sorted = [...allSpecies].sort((a,b)=>(b.detections?.total||0)-(a.detections?.total||0)).slice(0,5);
   const max = sorted[0]?.detections?.total||1;
   const thisYear = new Date().getFullYear();
-  const foySet = new Set(allSpecies.filter(sp => sp.latestDetectionAt &&
-    new Date(sp.latestDetectionAt).getFullYear()===thisYear && (sp.detections?.total||0)<80).map(s=>s.commonName));
+  const foyMap = getFoyMap();
+  const foySet = new Set(Object.keys(foyMap));
   t5.innerHTML = `<div class="section-label">Top 5 Most Detected</div><div class="sp-list">`+
     sorted.map((sp,i) => {
       const n = sp.detections?.total||0, pct = Math.round(n/max*100);
@@ -369,18 +368,18 @@ function renderTwoCol(c) {
 }
 
 function renderChart(c) {
-  if (!allDetections.length) return;
   const hc = Array(24).fill(0);
-  allDetections.forEach(d => hc[new Date(d.timestamp).getHours()]++);
-  const mx = Math.max(...hc,1), pk = hc.indexOf(Math.max(...hc));
+  todayDetections.forEach(d => hc[new Date(d.timestamp).getHours()]++);
+  const mx = Math.max(...hc, 1);
+  const pk = hc.reduce((best, val, h) => val > hc[best] ? h : best, 0);
   const lbls = ['12a','1','2','3','4','5','6','7','8','9','10','11','12p','1','2','3','4','5','6','7','8','9','10','11'];
   const sec = document.createElement('div');
   sec.className = 'mb';
-  sec.innerHTML = `<div class="panel"><div class="section-label">Activity by Hour</div><div class="chart-wrap">`+
+  sec.innerHTML = `<div class="panel"><div class="section-label">Activity by Hour — Today</div><div class="chart-wrap">`+
     hc.map((n,h) => {
-      const pct = Math.max(Math.round(n/mx*100),2);
+      const pct = Math.max(Math.round(n/mx*100), 2);
       return `<div class="chart-col" title="${lbls[h]}: ${n} detections">
-        <div class="chart-bar ${h===pk?'peak':n>0?'has-data':''}" style="height:${pct}%"></div>
+        <div class="chart-bar ${h===pk&&n>0?'peak':n>0?'has-data':''}" style="height:${pct}%"></div>
         <div class="chart-lbl">${h%3===0?lbls[h]:''}</div>
       </div>`;
     }).join('')+'</div></div>';
@@ -392,16 +391,7 @@ function renderUnusual(c) {
     const freq = ebirdFreq[sp.commonName];
     return freq !== undefined && freq <= UNUSUAL_THRESHOLD;
   });
-  if (!unusual.length) {
-    if (Object.keys(ebirdFreq).length === 0) {
-      const sec = document.createElement('div');
-      sec.className = 'mb';
-      sec.innerHTML = `<div class="panel"><div class="section-label">Unusual Detections</div>
-        <div class="empty">eBird frequency data unavailable.</div></div>`;
-      c.appendChild(sec);
-    }
-    return;
-  }
+  if (!unusual.length) return;
   const sorted = unusual.sort((a,b) => (ebirdFreq[a.commonName]||0) - (ebirdFreq[b.commonName]||0)).slice(0,8);
   const sec = document.createElement('div');
   sec.className = 'mb';
@@ -427,27 +417,47 @@ function renderUnusual(c) {
   c.appendChild(sec);
 }
 
+function getFoyMap() {
+  const thisYear = new Date().getFullYear();
+  const foyMap = {};
+  const sorted = [...allDetections].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+  sorted.forEach(d => {
+    const name = d.species?.commonName;
+    if (!name) return;
+    if (new Date(d.timestamp).getFullYear() !== thisYear) return;
+    if (!foyMap[name]) foyMap[name] = d;
+  });
+  return foyMap;
+}
+
 function renderFOY(c) {
   const thisYear = new Date().getFullYear();
-  const foy = allSpecies.filter(sp => sp.latestDetectionAt &&
-    new Date(sp.latestDetectionAt).getFullYear()===thisYear && (sp.detections?.total||0)<100)
-    .sort((a,b) => new Date(b.latestDetectionAt)-new Date(a.latestDetectionAt)).slice(0,8);
-  if (!foy.length) return;
+  const foyMap = getFoyMap();
+  const spTotals = {};
+  allSpecies.forEach(sp => { spTotals[sp.commonName] = sp.detections?.total || 0; });
+  const foyList = Object.entries(foyMap)
+    .map(([name, det]) => ({ name, det, total: spTotals[name] || 0 }))
+    .filter(item => item.total < 150)
+    .sort((a,b) => new Date(b.det.timestamp) - new Date(a.det.timestamp))
+    .slice(0, 8);
+  if (!foyList.length) return;
   const sec = document.createElement('div');
-  const cards = foy.map((sp,i) => {
-    const n = sp.detections?.total||0;
+  const cards = foyList.map((item, i) => {
+    const sp = item.det.species;
     return `<div class="foy-card fade-up" style="animation-delay:${i*.05}s"
       onclick="window.open('${audubonUrl(sp.commonName)}','_blank')">
-      ${sp.imageUrl?`<img class="foy-img" src="${sp.imageUrl}" onerror="this.style.display='none'" alt="">`
-        :`<div class="foy-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:1.8rem;background:var(--surface2)">🐦</div>`}
+      ${sp.imageUrl
+        ? `<img class="foy-img" src="${sp.imageUrl}" onerror="this.style.display='none'" alt="">`
+        : `<div class="foy-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:1.8rem;background:var(--surface2)">🐦</div>`}
       <div class="foy-body">
         <div class="foy-name">${sp.commonName}</div>
-        <div class="foy-date">${n} detections · Last: ${fmt(sp.latestDetectionAt)}</div>
+        <div class="foy-date">First heard ${fmt(item.det.timestamp)}</div>
         <span class="badge badge-new foy-tag">New ${thisYear}</span>
       </div>
     </div>`;
   }).join('');
-  sec.innerHTML = `<div class="section-label">First of ${thisYear} — Recent Arrivals</div><div class="foy-grid">${cards}</div>`;
+  sec.innerHTML = `<div class="section-label">First of ${thisYear} — Most Recent New Arrivals</div>
+    <div class="foy-grid">${cards}</div>`;
   c.appendChild(sec);
 }
 
