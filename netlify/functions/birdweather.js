@@ -1,3 +1,4 @@
+// v2
 const BW_TOKEN = '3sTagPuEREQgtPWFs5xXb5NB';
 const BW_BASE = `https://app.birdweather.com/api/v1/stations/${BW_TOKEN}`;
 const CONF_GENERAL = 0.70;
