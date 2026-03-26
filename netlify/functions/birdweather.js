@@ -1,4 +1,4 @@
-// v2
+// v3
 const BW_TOKEN = '3sTagPuEREQgtPWFs5xXb5NB';
 const BW_BASE = `https://app.birdweather.com/api/v1/stations/${BW_TOKEN}`;
 const CONF_GENERAL = 0.70;
@@ -37,11 +37,37 @@ const KING_COUNTY_FREQ = {
   'Merlin': 6, 'Peregrine Falcon': 4, 'Sharp-shinned Hawk': 8,
 };
 
+// Fetch all detections for today by paginating through cursor-based pages
+async function fetchTodayDetections(fromDate) {
+  const allDetections = [];
+  let cursor = null;
+  let pages = 0;
+  const maxPages = 20; // safety limit — handles up to 2000 detections per day
+
+  while (pages < maxPages) {
+    const cursorParam = cursor ? `&cursor=${cursor}` : '';
+    const url = `${BW_BASE}/detections?limit=100&order=asc&from=${fromDate}${cursorParam}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const dets = data.detections || [];
+    if (dets.length === 0) break;
+    allDetections.push(...dets);
+    // If we got fewer than 100 we've reached the end
+    if (dets.length < 100) break;
+    // Use the ID of the last detection as the cursor for next page
+    cursor = dets[dets.length - 1].id;
+    pages++;
+  }
+
+  return allDetections;
+}
+
 exports.handler = async (event) => {
   const action = event.queryStringParameters?.action || 'birdweather';
   const path = event.queryStringParameters?.path || '/species?limit=100&period=all';
 
   try {
+
     if (action === 'ebird-frequency') {
       return {
         statusCode: 200,
@@ -54,6 +80,47 @@ exports.handler = async (event) => {
       };
     }
 
+    // Today's hourly chart — fetch ALL detections for today server-side
+    if (action === 'today-chart') {
+      const fromDate = event.queryStringParameters?.from;
+      if (!fromDate) throw new Error('from date required');
+
+      const detections = await fetchTodayDetections(fromDate);
+
+      // Build hourly counts filtered by confidence, using local hour from timestamp
+      const hourCounts = Array(24).fill(0);
+      let totalToday = 0;
+      const speciesSet = new Set();
+
+      detections.forEach(d => {
+        if ((d.confidence || 0) < CONF_GENERAL) return;
+        // Parse local hour from timestamp (e.g. "2026-03-25T11:42:31.000-07:00")
+        const ts = d.timestamp;
+        const hourMatch = ts.match(/T(\d{2}):/);
+        if (hourMatch) {
+          hourCounts[parseInt(hourMatch[1])]++;
+          totalToday++;
+          if (d.species?.commonName) speciesSet.add(d.species.commonName);
+        }
+      });
+
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-cache',
+        },
+        body: JSON.stringify({
+          hourCounts,
+          totalToday,
+          speciesCount: speciesSet.size,
+          speciesNames: Array.from(speciesSet),
+        }),
+      };
+    }
+
+    // Standard BirdWeather pass-through
     const response = await fetch(BW_BASE + path);
     const data = await response.json();
 
