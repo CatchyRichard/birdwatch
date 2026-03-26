@@ -192,7 +192,7 @@ async function loadAll() {
     const [spR, dR, todayR, freq] = await Promise.all([
       bwFetch('/species?limit=100&period=all'),
       bwFetch('/detections?limit=100&period=all'),
-      bwFetch('/detections?limit=500&from=' + todayStr),
+     bwFetch('/detections?limit=500&period=day'),
       ebirdFetch()
     ]);
     allSpecies = spR.species || [];
