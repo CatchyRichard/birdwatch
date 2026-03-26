@@ -1,4 +1,4 @@
-// v3
+// v4
 const BW_TOKEN = '3sTagPuEREQgtPWFs5xXb5NB';
 const BW_BASE = `https://app.birdweather.com/api/v1/stations/${BW_TOKEN}`;
 const CONF_GENERAL = 0.70;
@@ -37,31 +37,6 @@ const KING_COUNTY_FREQ = {
   'Merlin': 6, 'Peregrine Falcon': 4, 'Sharp-shinned Hawk': 8,
 };
 
-// Fetch all detections for today by paginating through cursor-based pages
-async function fetchTodayDetections(fromDate) {
-  const allDetections = [];
-  let cursor = null;
-  let pages = 0;
-  const maxPages = 20; // safety limit — handles up to 2000 detections per day
-
-  while (pages < maxPages) {
-    const cursorParam = cursor ? `&cursor=${cursor}` : '';
-    const url = `${BW_BASE}/detections?limit=100&order=asc&from=${fromDate}${cursorParam}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const dets = data.detections || [];
-    if (dets.length === 0) break;
-    allDetections.push(...dets);
-    // If we got fewer than 100 we've reached the end
-    if (dets.length < 100) break;
-    // Use the ID of the last detection as the cursor for next page
-    cursor = dets[dets.length - 1].id;
-    pages++;
-  }
-
-  return allDetections;
-}
-
 exports.handler = async (event) => {
   const action = event.queryStringParameters?.action || 'birdweather';
   const path = event.queryStringParameters?.path || '/species?limit=100&period=all';
@@ -71,77 +46,69 @@ exports.handler = async (event) => {
     if (action === 'ebird-frequency') {
       return {
         statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=86400',
-        },
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=86400' },
         body: JSON.stringify({ frequencies: KING_COUNTY_FREQ }),
       };
     }
 
-    // Today's hourly chart — fetch ALL detections for today server-side
-    if (action === 'today-chart') {
-      const fromDate = event.queryStringParameters?.from;
-      if (!fromDate) throw new Error('from date required');
-
-      const detections = await fetchTodayDetections(fromDate);
-
-      // Build hourly counts filtered by confidence, using local hour from timestamp
-      const hourCounts = Array(24).fill(0);
-      let totalToday = 0;
-      const speciesSet = new Set();
-
-      detections.forEach(d => {
-        if ((d.confidence || 0) < CONF_GENERAL) return;
-        // Parse local hour from timestamp (e.g. "2026-03-25T11:42:31.000-07:00")
-        const ts = d.timestamp;
-        const hourMatch = ts.match(/T(\d{2}):/);
-        if (hourMatch) {
-          hourCounts[parseInt(hourMatch[1])]++;
-          totalToday++;
-          if (d.species?.commonName) speciesSet.add(d.species.commonName);
-        }
-      });
-
+    if (action === 'weekly-trend') {
+      const days = [];
+      const now = new Date();
+      const promises = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toLocaleDateString('en-CA');
+        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+        days.push({ dateStr, dayName, isToday: i === 0 });
+        promises.push(
+          fetch(`${BW_BASE}/stats?since=${dateStr}&period=day`)
+            .then(r => r.json())
+            .catch(() => ({ detections: 0, species: 0 }))
+        );
+      }
+      const results = await Promise.all(promises);
+      const trend = days.map((day, i) => ({
+        day: day.dayName,
+        date: day.dateStr,
+        isToday: day.isToday,
+        detections: results[i].detections || 0,
+        species: results[i].species || 0,
+      }));
       return {
         statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'no-cache',
-        },
-        body: JSON.stringify({
-          hourCounts,
-          totalToday,
-          speciesCount: speciesSet.size,
-          speciesNames: Array.from(speciesSet),
-        }),
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' },
+        body: JSON.stringify({ trend }),
       };
     }
 
-    // Standard BirdWeather pass-through
+    if (action === 'today-stats') {
+      const fromDate = event.queryStringParameters?.from;
+      if (!fromDate) throw new Error('from date required');
+      const [spRes, statsRes] = await Promise.all([
+        fetch(`${BW_BASE}/species?limit=100&from=${fromDate}`).then(r => r.json()),
+        fetch(`${BW_BASE}/stats?since=${fromDate}&period=day`).then(r => r.json()),
+      ]);
+      const species = (spRes.species || []).map(sp => sp.commonName);
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' },
+        body: JSON.stringify({ speciesNames: species, speciesCount: species.length, totalDetections: statsRes.detections || 0 }),
+      };
+    }
+
     const response = await fetch(BW_BASE + path);
     const data = await response.json();
-
     if (data.detections) {
       data.detections = data.detections.filter(d => (d.confidence || 0) >= CONF_GENERAL);
     }
-
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-cache',
-      },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' },
       body: JSON.stringify(data),
     };
 
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message }),
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
